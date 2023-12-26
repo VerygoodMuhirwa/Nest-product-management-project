@@ -31,14 +31,17 @@ export class ProductsService {
 
   async deleteProduct(productId: string): Promise<any> {
     try {
-  
+      await this.productModel.deleteOne({ _id: productId })
+      return { message: "Product deleted successfully" };
     } catch (error) {
       console.error('Error deleting products:', error.message);
       throw new Error('Failed to delete products');
     }
-  
-  
-  
-
   }
+  async updateProduct(productId: string, productDescription: string , productName:string): Promise < any > {
+    const updatedProduct = await this.productModel.findOneAndUpdate({ _id: productId }, { productDescription, productName }, { new: true })
+    await updatedProduct.save();
+    return { message: "Product updated successfully",...updatedProduct}
+
+    }
 }

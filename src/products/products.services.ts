@@ -13,7 +13,6 @@ export class ProductsService {
     const savedProduct = await newProduct.save();
     return { ...savedProduct.toJSON() }
   }
-
   async getAllProducts(): Promise<any> {
     try {
       const allProducts = await this.productModel.find();
@@ -37,11 +36,12 @@ export class ProductsService {
       console.error('Error deleting products:', error.message);
       throw new Error('Failed to delete products');
     }
+
   }
   async updateProduct(productId: string, productDescription: string , productName:string): Promise < any > {
     const updatedProduct = await this.productModel.findOneAndUpdate({ _id: productId }, { productDescription, productName }, { new: true })
     await updatedProduct.save();
-    return { message: "Product updated successfully",...updatedProduct}
+    return { message: "Product updated successfully",updatedProduct}
 
     }
 }

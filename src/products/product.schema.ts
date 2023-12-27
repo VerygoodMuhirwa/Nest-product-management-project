@@ -5,6 +5,7 @@ import { HydratedDocument } from 'mongoose';
 export type productType= HydratedDocument<ProductModel>
 @Schema()
 export class ProductModel extends Document {
+
   @Prop()
   productName: string;
 

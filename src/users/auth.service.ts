@@ -27,9 +27,9 @@ export class AuthService{
     }
 
   
-   async create(user: Partial<UserModel>) : Promise<{message:string, user:UserModel}>{
+   async create(user: Partial<UserModel>) : Promise<{message:string, user:UserModel} | {message:string}>{
         const newUser = await this.userModel.create(user)
-      const savedUser = await newUser.save()
+     const savedUser = await newUser.save()
       return this.UserConfirmation.sendEmail(savedUser._id)
     }    
   async verifyCode(userId: string, code: number): Promise<any> {

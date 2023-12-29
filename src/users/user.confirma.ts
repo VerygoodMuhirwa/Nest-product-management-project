@@ -10,21 +10,25 @@ import { UserModel } from "./user.schema"
 export class UserConfirmation{
     constructor(private readonly emailService: MailerService , @InjectModel("VerificationCodeModel")private readonly verificationModel: Model<VerificationCodeModel> , @InjectModel("User") private readonly userModel:Model<UserModel> ) { }
         
-    async sendEmail(id: string): Promise<{message:string, user: UserModel}>{
+    async sendEmail(id: string): Promise<{message:string, user: UserModel}  | {message:string}>{
+        console.log(id);
+        
         const user = await this.userModel.findById(id)
-        if(!user){
-            throw new UnauthorizedException("User not found")
+        if (!user) {
+            return {message:"User not found"}
         }
 
-        const confirmationMessage= Math.floor(Math.random() * 1000000)
+        const confirmationMessage = Math.floor(Math.random() * 1000000)
+        
+        const verificationRecord = await this.verificationModel.create({ userId: id, code:confirmationMessage })
+        await verificationRecord.save()
         await this.emailService.sendMail({
             to: Config.user,
             from: Config.user,
             subject: "Rwanda coding academy infos",
             text:  `The confirmation code of your account is ${confirmationMessage} `
         })
-         const verificationRecord = await this.verificationModel.create({ userId: id, code: confirmationMessage })
-         await verificationRecord.save()
+         
         return {message:"Confirmation code sent to your email, please open it and verify  ", user}
     }
 

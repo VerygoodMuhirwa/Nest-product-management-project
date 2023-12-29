@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { UserService } from './users.service';
 import * as bcrypt from 'bcrypt'
 import * as jwt from "jsonwebtoken"
@@ -8,9 +7,14 @@ import { UserModel } from './user.schema';
 import { Model } from "mongoose"
 import { UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { UserConfirmation } from './user.confirma';
 @Injectable()
 export class AuthService{
-    constructor(private readonly userService: UserService, private readonly jwtService: JwtService, @InjectModel("User") private readonly userModel: Model<UserModel>) { }
+  constructor(
+    private readonly userService: UserService,
+    @InjectModel("User") private readonly userModel: Model<UserModel>,
+    private readonly UserConfirmation:UserConfirmation
+) { }
     
     async validateUser(email: string, password: string): Promise<any>{
         const user = await this.userService.findOne(email)        
@@ -22,6 +26,15 @@ export class AuthService{
         return null;
     }
 
+  
+   async create(user: Partial<UserModel>) : Promise<{message:string, user:UserModel}>{
+        const newUser = await this.userModel.create(user)
+      const savedUser = await newUser.save()
+      return this.UserConfirmation.sendEmail(savedUser._id)
+    }    
+  async verifyCode(userId: string, code: number): Promise<any> {
+  return this.UserConfirmation.verifyCode(userId, code)
+}
 
     async loginUser(user: any): Promise<{message:string, accessToken: string } | {message:string}>{
         if (!user) {
@@ -38,9 +51,13 @@ export class AuthService{
         }
     }
 
-    async register(user: Partial<UserModel>): Promise<UserModel>{
+  async register(user: Partial<UserModel>): Promise<{ message: string, user: UserModel } |  {message:string}>{
+    const userExists = await this.userService.findOne(user.email)
+    if (userExists) {
+      return {message:"The user with that email already exists"}
+    }
         const harshedPassword = await bcrypt.hash(user.password, 10)    
-        return this.userService.create({...user, password:harshedPassword})
+        return this.create({...user, password:harshedPassword})
     }
 
      verifyToken(token: string): any {
@@ -75,7 +92,8 @@ export class AuthService{
             const now = Math.floor(Date.now() / 1000);
 
 if (decodedToken.exp && decodedToken.exp < now) {
-  throw new UnauthorizedException('Token has expired');
+    throw new UnauthorizedException('Token has expired');
+    
             }
             
             
@@ -95,5 +113,7 @@ if (decodedToken.exp && decodedToken.exp < now) {
     } catch (error) {
       throw new UnauthorizedException('Invalid token');
     }
-  }
+    }
+    
+     
 }

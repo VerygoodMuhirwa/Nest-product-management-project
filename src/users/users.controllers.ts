@@ -1,12 +1,14 @@
 // app.controller.ts
-import { Controller, Get, Post, Body,Request, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body,Request , Param, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
-import { JwtStrategy } from './jwt.strategy';
+import {UserConfirmation} from "./user.confirma"
 import { UserService } from './users.service';
 @Controller('auth')
 export class UsersController{
-  constructor(private readonly authService: AuthService , private readonly userService: UserService) {}
+    constructor(
+      private readonly authService: AuthService,
+    ) { }
 
   @Post('login')
   async login(@Body() body: { email: string; password: string }): Promise<{ accessToken: string } | {message:string}> {
@@ -25,4 +27,11 @@ export class UsersController{
        const token = req.headers.authorization.split(' ')[1];
     return this.authService.getProfile(token);
   }
+
+  @Get("verifyUser/:verificationCode") 
+  async verifyUser(@Param("verificationCode") verificationCode: number , @Body("userId") userId: string): Promise<any>{
+    return this.authService.verifyCode(userId, verificationCode)
+  }
 }
+
+

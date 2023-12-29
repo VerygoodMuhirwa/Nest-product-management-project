@@ -2,19 +2,42 @@ import { Module } from '@nestjs/common';
 import { UserService } from './users.service';
 import { UsersController } from './users.controllers';
 import { MongooseModule } from '@nestjs/mongoose';
-import { UserModel, UserSchema } from "./user.schema"
+import {  UserSchema } from "./user.schema"
 import Config from "../products/product.config"
 import { AuthService } from './auth.service';
-import { JwtStrategy } from './jwt.strategy';
-import { JwtModule, JwtService } from '@nestjs/jwt';
-import { LocalStrategy } from './local.strategy';
+import {UserConfirmation} from "./user.confirma"
+import { JwtModule } from '@nestjs/jwt';
+import {JwtStrategy} from "./jwt.strategy"
+import { MailerModule } from "@nestjs-modules/mailer"
+import { VerificationCodeSchema } from './verifcationCode.schema';
+
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: "User", schema: UserSchema }]),
-    JwtModule.register({ secret: Config.secretKey, signOptions: { expiresIn: "1h" } })
+    MongooseModule.forFeature([{ name: "User", schema: UserSchema },{name:"VerificationCodeModel", schema:VerificationCodeSchema}]),
+      JwtModule.register({ secret: Config.secretKey, signOptions: { expiresIn: "1h" } }),
+       MailerModule.forRoot({
+      transport: {
+        host: 'smtp.domain.com',
+        port: 587,
+           ignoreTLS: true,
+        service:"gmail",
+        secure: false,
+        auth: {
+          user: Config.user,
+          pass: Config.pass,
+        },
+      },
+      defaults: {
+        from: '"No Reply" <no-reply@localhost>',
+      },
+
+       }),
+       
+        
+       
   ],
   controllers: [UsersController],
-    providers: [AuthService, UserService, JwtStrategy ],
+    providers: [AuthService, UserService , UserConfirmation ,  JwtStrategy ],
   exports:[ AuthService]
 })
 export class UsersModule {}

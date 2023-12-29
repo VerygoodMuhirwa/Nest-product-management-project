@@ -10,9 +10,7 @@ import { UserModel } from "./user.schema"
 export class UserConfirmation{
     constructor(private readonly emailService: MailerService , @InjectModel("VerificationCodeModel")private readonly verificationModel: Model<VerificationCodeModel> , @InjectModel("User") private readonly userModel:Model<UserModel> ) { }
         
-    async sendEmail(id: string): Promise<{message:string, user: UserModel}  | {message:string}>{
-        console.log(id);
-        
+    async sendEmail(id: string): Promise<{message:string, user: UserModel}  | {message:string}>{        
         const user = await this.userModel.findById(id)
         if (!user) {
             return {message:"User not found"}
@@ -23,11 +21,12 @@ export class UserConfirmation{
         const verificationRecord = await this.verificationModel.create({ userId: id, code:confirmationMessage })
         await verificationRecord.save()
         await this.emailService.sendMail({
-            to: Config.user,
+            to: user.email,
             from: Config.user,
             subject: "Rwanda coding academy infos",
             text:  `The confirmation code of your account is ${confirmationMessage} `
         })
+
          
         return {message:"Confirmation code sent to your email, please open it and verify  ", user}
     }
@@ -37,7 +36,7 @@ export class UserConfirmation{
             const verificationCode = await this.verificationModel.findOne({ userId: id, code: code })
             const user = await this.userModel.findById(id)
             if (!verificationCode) {
-                throw new UnauthorizedException('Invalid code');
+                return {message:"Invalid confirmation code"}
             }
             const username = user.username 
             return {message:  `${username} verified successfully`}

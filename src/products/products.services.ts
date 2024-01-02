@@ -3,15 +3,17 @@ import { InjectModel } from "@nestjs/mongoose";
 import { ProductModel} from "./product.schema"
 
 import { Model } from "mongoose";
+import { ImageService } from "./image.services";
+import { log } from "console";
 
 @Injectable()
 export class ProductsService {
-  constructor(@InjectModel("products") private readonly productModel: Model<ProductModel>) { }
+  constructor(@InjectModel("products") private readonly productModel: Model<ProductModel> , private readonly imageService: ImageService) { }
 
-  async insertProduct(productName: string, productDescription: string): Promise<any> {
+  async insertProduct(productName: string, fileName:string, productDescription: string): Promise<any> {
     const newProduct = new this.productModel({ productName, productDescription })
-    const savedProduct = await newProduct.save();
-    return { ...savedProduct.toJSON() }
+    const savedProduct = await newProduct.save();        
+    return this.imageService.create(fileName, savedProduct._id)
   }
   async getAllProducts(): Promise<any> {
     try {

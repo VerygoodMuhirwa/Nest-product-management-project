@@ -10,5 +10,6 @@ import { UsersModule } from './users/users.module';
   imports: [ MongooseModule.forRoot(Config.mongodbUrl),ProductsModule , UsersModule],
   controllers: [AppController],
   providers: [AppService],
+  
 })
 export class AppModule {}

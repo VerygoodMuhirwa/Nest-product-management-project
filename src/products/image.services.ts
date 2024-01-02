@@ -9,9 +9,16 @@ import { ImageModel } from "./image.schema";
 export class ImageService{
     constructor(@InjectModel("productImage") private readonly productImageModel: Model<ImageModel>) { }
     async create(fileName: Object, productId: string): Promise<any> {
-        const createdImage = new this.productImageModel({fileName:fileName, productId});
-        const storedCredentials = createdImage.save();
-        return (await storedCredentials).populate("productId")
+        const createdImage =await  new this.productImageModel({fileName:fileName, productId});
+        const storedCredentials = await createdImage.save();
+        const productImageUrl = `http://localhost:3000/${(await storedCredentials).fileName}`
+        const populatedCredentials = await storedCredentials.populate("productId")        
+        return {
+            productImageUrl,
+            populatedCredentials
+        }
+
     }
+
 
 }

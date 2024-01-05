@@ -7,6 +7,7 @@ import { diskStorage } from "multer"
 import { Response } from "express";
 import { Express } from "express";
 import * as path from "path";
+import { ApiCreatedResponse } from "@nestjs/swagger";
 @Controller("products")
 
 export class ProductsController {
@@ -21,7 +22,10 @@ export class ProductsController {
                 cb(null, `${file.originalname}`);
             },
         }),
-    }))
+         }))
+
+        
+    @ApiCreatedResponse({ description: "Product added successfully" })
     insertProduct(@Body("productName") productName: string, @Body("productDescription") productDescription: string, @UploadedFile() file: Express.Multer.File): any {          
          return this.productService.insertProduct(productName, file.originalname, productDescription);
     }

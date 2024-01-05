@@ -4,7 +4,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import {UserConfirmation} from "./user.confirma"
 import { UserService } from './users.service';
-import { ApiBadRequestResponse, ApiConflictResponse, ApiCreatedResponse, ApiNotFoundResponse, ApiOkResponse } from '@nestjs/swagger';
+import { ApiBadRequestResponse, ApiConflictResponse, ApiCreatedResponse, ApiNotFoundResponse, ApiOkResponse, ApiUnauthorizedResponse } from '@nestjs/swagger';
 @Controller('auth')
 export class UsersController{
     constructor(
@@ -25,14 +25,16 @@ export class UsersController{
   async register(@Body() body: { username: string; password: string , email:string}): Promise<any> {
     return this.authService.register(body);
   }
-
-   @Get('profile')
+@ApiUnauthorizedResponse({description:"Invalid token"})
+  @Get('profile')
   @UseGuards(AuthGuard('jwt'))
   async getProfile(@Request() req): Promise<any> {
        const token = req.headers.authorization.split(' ')[1];
     return this.authService.getProfile(token);
   }
-
+    
+  @ApiOkResponse({ description: "User verified successfully" })
+  @ApiNotFoundResponse({description:"Invalid confirmaton code"})
   @Get("verifyUser/:verificationCode") 
   async verifyUser(@Param("verificationCode") verificationCode: number , @Body("userId") userId: string): Promise<any>{
     return this.authService.verifyCode(userId, verificationCode)

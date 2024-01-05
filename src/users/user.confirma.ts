@@ -6,7 +6,8 @@ import { VerificationCodeModel } from "./verifcationCode.schema"
 import { UnauthorizedException } from "@nestjs/common"
 import { Model } from "mongoose"
 import { UserModel } from "./user.schema"
-import { ApiOkResponse } from "@nestjs/swagger"
+import { ApiNotFoundResponse, ApiOkResponse } from "@nestjs/swagger"
+import { NOTFOUND } from "dns"
 @Injectable()
 export class UserConfirmation{
     constructor(private readonly emailService: MailerService , @InjectModel("VerificationCodeModel")private readonly verificationModel: Model<VerificationCodeModel> , @InjectModel("User") private readonly userModel:Model<UserModel> ) { }
@@ -30,12 +31,13 @@ export class UserConfirmation{
         return new HttpException({ message:"Confirmation code sent to your email , pleaes open it and verify "  , user},  HttpStatus.OK, )
     }
 
+
     async verifyCode(id: string, code: number): Promise<any> {
         try {
             const verificationCode = await this.verificationModel.findOne({ userId: id, code: code })
             const user = await this.userModel.findById(id)
             if (!verificationCode) {
-                return new HttpException("Invalid verification code", HttpStatus.BAD_REQUEST)
+                return new HttpException("Invalid verification code", HttpStatus.NOT_FOUND)
             }
             const username = user.username 
             return new HttpException({message:`${username} verified successfully`}, HttpStatus.OK)

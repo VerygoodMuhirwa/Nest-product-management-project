@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { UserService } from './users.service';
 import * as bcrypt from 'bcrypt'
 import * as jwt from "jsonwebtoken"
@@ -26,7 +26,6 @@ export class AuthService{
         return null;
     }
 
-  
    async create(user: Partial<UserModel>) : Promise<{message:string, user:UserModel} | {message:string}>{
         const newUser = await this.userModel.create(user)
      const savedUser = await newUser.save()
@@ -37,28 +36,22 @@ export class AuthService{
 }
 
     async loginUser(user: any): Promise<{message:string, accessToken: string } | {message:string}>{
-        if (!user) {
-                       return {message:"Invalid email or password"}
-
-        } else {
-             console.log(user);
-             
+      if (!user) {
+        throw new HttpException({ message: "Invalid email or password" } , HttpStatus.NOT_FOUND)
+        } else {             
              const payload = { username: user._doc.username, _id: user._doc._id }
-            return {
-                message:"Logged in successfully",
-                accessToken: await jwt.sign(payload, Config.secretKey)
-            }
+          throw new HttpException({message:"logged in successfully" , accessToken: await jwt.sign(payload, Config.secretKey)}, HttpStatus.OK)
         }
-    }
-
+  }
+  
   async register(user: Partial<UserModel>): Promise<{ message: string, user: UserModel } |  {message:string}>{
-    const userExists = await this.userService.findOne(user.email)
+      const userExists = await this.userService.findOne(user.email)
     if (userExists) {
-      return {message:"The user with that email already exists"}
-    }
-        const harshedPassword = await bcrypt.hash(user.password, 10)    
-        return this.create({...user, password:harshedPassword})
-    }
+        throw new ConflictException("The user with that email already exists")
+      }
+          const harshedPassword = await bcrypt.hash(user.password, 10)    
+          return this.create({...user, password:harshedPassword})
+      }
 
      verifyToken(token: string): any {
     try {

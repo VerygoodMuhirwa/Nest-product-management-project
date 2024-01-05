@@ -4,18 +4,23 @@ import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import {UserConfirmation} from "./user.confirma"
 import { UserService } from './users.service';
+import { ApiBadRequestResponse, ApiConflictResponse, ApiCreatedResponse, ApiNotFoundResponse, ApiOkResponse } from '@nestjs/swagger';
 @Controller('auth')
 export class UsersController{
     constructor(
       private readonly authService: AuthService,
     ) { }
 
+  @ApiOkResponse({ description: "User logged in successfully" })
+  @ApiNotFoundResponse({description:"Invalid email or password"})
   @Post('login')
   async login(@Body() body: { email: string; password: string }): Promise<{ accessToken: string } | {message:string}> {
     const user = await this.authService.validateUser(body.email, body.password);
     return this.authService.loginUser(user);
   }
 
+  @ApiCreatedResponse({ description: "User created successfully" })
+  @ApiConflictResponse({ description: "The user with that email already exists" })
   @Post('register')
   async register(@Body() body: { username: string; password: string , email:string}): Promise<any> {
     return this.authService.register(body);
